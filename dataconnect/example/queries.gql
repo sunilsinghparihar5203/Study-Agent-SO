@@ -1,0 +1,53 @@
+query GetUserGoals($userId: UUID!) @auth(level: USER, insecureReason: "This query fetches goals for a specific user, requiring user authentication.") {
+  goals(where: {userId: {eq: $userId}}) {
+    id
+    name
+    targetDate
+    status
+    isTemplate
+    isPublic
+    steps_on_goal {
+      id
+      description
+      isComplete
+      dueDate
+      estimatedTime
+      priority
+      resources_on_step {
+        id
+        title
+        type
+        content
+      }
+    }
+  }
+}
+
+mutation CreateNewGoal($name: String!, $targetDate: Date!, $status: String!, $isTemplate: Boolean, $isPublic: Boolean, $description: String) @auth(level: USER) {
+  goal_insert(data: {
+    userId_expr: "auth.uid",
+    name: $name,
+    targetDate: $targetDate,
+    status: $status,
+    isTemplate: $isTemplate,
+    isPublic: $isPublic,
+    description: $description
+  })
+}
+
+mutation UpdateStep($stepId: UUID!, $description: String, $isComplete: Boolean, $estimatedTime: Int, $dueDate: Date, $priority: String) @auth(level: USER) {
+  step_update(
+    key: {id: $stepId},
+    data: {
+      description: $description,
+      isComplete: $isComplete,
+      estimatedTime: $estimatedTime,
+      dueDate: $dueDate,
+      priority: $priority
+    }
+  )
+}
+
+mutation DeleteResource($resourceId: UUID!) @auth(level: USER) {
+  resource_delete(key: {id: $resourceId})
+}

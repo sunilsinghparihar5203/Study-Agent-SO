@@ -1,0 +1,137 @@
+mutation CreateDemoData @transaction @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  user_insertMany(
+    data: [
+      {
+        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        displayName: "Alice Smith",
+        email: "alice.smith@example.com",
+        photoUrl: "https://example.com/alice.jpg",
+        createdAt: "2023-01-01T10:00:00Z"
+      },
+      {
+        id: "b1cde2f3-4a5b-6c7d-8e9f-0123456789ab",
+        displayName: "Bob Johnson",
+        email: "bob.johnson@example.com",
+        photoUrl: "https://example.com/bob.jpg",
+        createdAt: "2023-01-02T11:00:00Z"
+      }
+    ]
+  )
+  goal_insertMany(
+    data: [
+      {
+        id: "c2d3e4f5-6a7b-8c9d-0e1f-234567890abc",
+        userId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        name: "Learn GraphQL",
+        targetDate: "2024-12-31",
+        createdAt: "2023-01-05T12:00:00Z",
+        status: "In Progress",
+        description: "Deep dive into GraphQL concepts and build a sample app.",
+        isTemplate: false,
+        isPublic: true
+      },
+      {
+        id: "d3e4f5a6-7b8c-9d0e-1f2a-345678901bcd",
+        userId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        name: "Run Marathon",
+        targetDate: "2024-06-15",
+        createdAt: "2023-02-10T09:00:00Z",
+        status: "Not Started",
+        description: "Train for and complete a full marathon.",
+        isTemplate: false,
+        isPublic: false
+      },
+      {
+        id: "e4f5a6b7-8c9d-0e1f-2a3b-456789012cde",
+        userId: "b1cde2f3-4a5b-6c7d-8e9f-0123456789ab",
+        name: "Write a Book",
+        targetDate: "2025-01-01",
+        createdAt: "2023-03-20T14:30:00Z",
+        status: "In Progress",
+        description: "Draft and publish a novel.",
+        isTemplate: false,
+        isPublic: true
+      }
+    ]
+  )
+  step_insertMany(
+    data: [
+      {
+        id: "f5a6b7c8-9d0e-1f2a-3b4c-567890123def",
+        goalId: "c2d3e4f5-6a7b-8c9d-0e1f-234567890abc",
+        description: "Read GraphQL documentation",
+        isComplete: false,
+        createdAt: "2023-01-06T13:00:00Z",
+        estimatedTime: 5,
+        dueDate: "2023-01-15",
+        priority: "High"
+      },
+      {
+        id: "g6b7c8d9-0e1f-2a3b-4c5d-678901234efg",
+        goalId: "c2d3e4f5-6a7b-8c9d-0e1f-234567890abc",
+        description: "Build a simple GraphQL server",
+        isComplete: false,
+        createdAt: "2023-01-16T10:00:00Z",
+        estimatedTime: 10,
+        dueDate: "2023-01-31",
+        priority: "Medium"
+      },
+      {
+        id: "h7c8d9e0-1f2a-3b4c-5d6e-789012345fgh",
+        goalId: "d3e4f5a6-7b8c-9d0e-1f2a-345678901bcd",
+        description: "Start daily running routine",
+        isComplete: false,
+        createdAt: "2023-02-11T08:00:00Z",
+        estimatedTime: 30,
+        dueDate: "2023-03-01",
+        priority: "High"
+      },
+      {
+        id: "i8d9e0f1-2a3b-4c5d-6e7f-890123456ghi",
+        goalId: "e4f5a6b7-8c9d-0e1f-2a3b-456789012cde",
+        description: "Outline book chapters",
+        isComplete: false,
+        createdAt: "2023-03-21T15:00:00Z",
+        estimatedTime: 8,
+        dueDate: "2023-04-10",
+        priority: "Medium"
+      }
+    ]
+  )
+  resource_insertMany(
+    data: [
+      {
+        id: "j9e0f1a2-3b4c-5d6e-7f8a-901234567hij",
+        stepId: "f5a6b7c8-9d0e-1f2a-3b4c-567890123def",
+        type: "Link",
+        content: "https://graphql.org/learn/",
+        createdAt: "2023-01-06T13:30:00Z",
+        title: "Official GraphQL Documentation"
+      },
+      {
+        id: "k0f1a2b3-4c5d-6e7f-8a9b-012345678ijk",
+        stepId: "f5a6b7c8-9d0e-1f2a-3b4c-567890123def",
+        type: "Video",
+        content: "https://youtube.com/graphql_tutorial",
+        createdAt: "2023-01-07T10:00:00Z",
+        title: "GraphQL for Beginners"
+      },
+      {
+        id: "l1a2b3c4-5d6e-7f8a-9b0c-123456789jkl",
+        stepId: "g6b7c8d9-0e1f-2a3b-4c5d-678901234efg",
+        type: "Code Repository",
+        content: "https://github.com/my_graphql_server",
+        createdAt: "2023-01-18T16:00:00Z",
+        title: "My Sample GraphQL Server"
+      },
+      {
+        id: "m2b3c4d5-6e7f-8a9b-0c1d-234567890klm",
+        stepId: "h7c8d9e0-1f2a-3b4c-5d6e-789012345fgh",
+        type: "Fitness Tracker",
+        content: "https://strava.com/my_running_log",
+        createdAt: "2023-02-12T09:00:00Z",
+        title: "Strava Running Log"
+      }
+    ]
+  )
+}

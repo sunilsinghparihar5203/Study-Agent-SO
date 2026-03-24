@@ -1,0 +1,35 @@
+type User @table {
+  displayName: String!
+  createdAt: Timestamp!
+  email: String
+  photoUrl: String
+}
+
+type Goal @table {
+  user: User!
+  name: String!
+  targetDate: Date!
+  createdAt: Timestamp!
+  status: String!
+  description: String
+  isTemplate: Boolean
+  isPublic: Boolean
+}
+
+type Step @table {
+  goal: Goal!
+  description: String!
+  isComplete: Boolean!
+  createdAt: Timestamp!
+  estimatedTime: Int
+  dueDate: Date
+  priority: String
+}
+
+type Resource @table {
+  step: Step!
+  type: String!
+  content: String!
+  createdAt: Timestamp!
+  title: String
+}

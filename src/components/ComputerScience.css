@@ -1,0 +1,281 @@
+.computer-science {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cs-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 15px;
+}
+
+.cs-header h2 {
+  margin: 0 0 1rem 0;
+  font-size: 2.5rem;
+}
+
+.cs-header p {
+  margin: 0;
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.cs-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.topics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.topic-card {
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  border-top: 5px solid;
+}
+
+.topic-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.topic-card.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.topic-card h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.4rem;
+}
+
+.topic-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.weightage {
+  background: #667eea;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.subtopics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.subtopic {
+  background: #f0f0f0;
+  color: #666;
+  padding: 0.25rem 0.5rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  border: 1px solid #e2e8f0;
+}
+
+.more-subtopics {
+  background: #ffc107;
+  color: #333;
+  padding: 0.25rem 0.5rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.study-area {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.practice-section {
+  margin-bottom: 2rem;
+}
+
+.practice-section h3 {
+  color: #333;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.question-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 1.5rem;
+  border-left: 4px solid #667eea;
+}
+
+.question-text {
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.option-btn {
+  padding: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.option-btn:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.notes-section {
+  margin-top: 2rem;
+}
+
+.notes-section h3 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.notes-input {
+  margin-bottom: 1rem;
+}
+
+.notes-input textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.notes-input textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.save-note-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 1rem;
+}
+
+.save-note-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.save-note-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.saved-notes {
+  margin-top: 2rem;
+}
+
+.saved-notes h4 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.note-item {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-left: 3px solid #28a745;
+}
+
+.note-content {
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.note-timestamp {
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.cs-footer {
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .computer-science {
+    padding: 1rem;
+  }
+  
+  .cs-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .topics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .topic-card {
+    padding: 1rem;
+  }
+  
+  .topic-card h3 {
+    font-size: 1.2rem;
+  }
+  
+  .options {
+    grid-template-columns: 1fr;
+  }
+  
+  .study-area {
+    padding: 1.5rem;
+  }
+}
