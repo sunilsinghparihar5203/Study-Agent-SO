@@ -24,6 +24,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
+  onAuthStateChanged,
+  setPersistence,
+  browserSessionPersistence,
 } from "firebase/auth";
 
 // Firebase configuration from environment variables
@@ -33,23 +36,76 @@ const cleanEnv = (value) => {
   return trimmed.replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
 };
 
+// Firebase configuration - NEVER hardcode credentials
 const firebaseConfig = {
-  apiKey: cleanEnv(import.meta.env.VITE_FIREBASE_API_KEY) || "demo-api-key",
-  authDomain:
-    cleanEnv(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) ||
-    "demo.firebaseapp.com",
-  projectId:
-    cleanEnv(import.meta.env.VITE_FIREBASE_PROJECT_ID) || "demo-project",
-  storageBucket:
-    cleanEnv(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) ||
-    "demo.appspot.com",
-  messagingSenderId:
-    cleanEnv(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) || "123456789",
-  appId: cleanEnv(import.meta.env.VITE_FIREBASE_APP_ID) || "demo-app-id",
-  measurementId:
-    cleanEnv(import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) ||
-    "demo-measurement-id",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
+
+// Debug environment variables
+console.log("🔍 Environment Variables Check:");
+console.log(
+  "VITE_FIREBASE_API_KEY exists:",
+  !!import.meta.env.VITE_FIREBASE_API_KEY,
+);
+console.log(
+  "VITE_FIREBASE_PROJECT_ID exists:",
+  !!import.meta.env.VITE_FIREBASE_PROJECT_ID,
+);
+console.log(
+  "VITE_FIREBASE_APP_ID exists:",
+  !!import.meta.env.VITE_FIREBASE_APP_ID,
+);
+
+// Test if Vite is reading .env at all
+console.log("🔍 Vite Env Test:");
+console.log("NODE_ENV:", import.meta.env.NODE_ENV);
+console.log("MODE:", import.meta.env.MODE);
+console.log(
+  "All env vars:",
+  Object.keys(import.meta.env).filter((key) => key.startsWith("VITE_")),
+);
+
+// Validate required Firebase config
+if (
+  !firebaseConfig.apiKey ||
+  !firebaseConfig.projectId ||
+  !firebaseConfig.appId
+) {
+  console.error("❌ Firebase configuration is missing required fields.");
+  console.error("Available environment variables:", {
+    apiKey: !!import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: !!import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: !!import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: !!import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: !!import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: !!import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: !!import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  });
+
+  // Fallback to demo mode instead of throwing error
+  console.warn(
+    "⚠️ Falling back to demo mode. Please check your .env file configuration.",
+  );
+
+  // Use demo configuration
+  Object.assign(firebaseConfig, {
+    apiKey: "demo-api-key",
+    authDomain: "demo.firebaseapp.com",
+    projectId: "demo-project",
+    storageBucket: "demo.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "demo-app-id",
+    measurementId: "demo-measurement-id",
+  });
+}
+
+console.log("🔍 Final Firebase Config:", firebaseConfig);
 
 // Check if Firebase is properly configured
 if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "demo-api-key") {
@@ -71,6 +127,10 @@ try {
   db = getFirestore(app);
   auth = getAuth(app);
 
+  setPersistence(auth, browserSessionPersistence).catch((error) => {
+    console.error("❌ Failed to set auth persistence:", error);
+  });
+
   console.log("✅ Firebase initialized successfully");
 } catch (error) {
   console.error("❌ Firebase initialization failed:", error);
@@ -82,7 +142,7 @@ try {
   auth = null;
 }
 
-export { app, analytics, db, auth };
+export { app, analytics, db, auth, onAuthStateChanged };
 
 // Authentication functions
 export const signUpWithEmail = async (email, password) => {

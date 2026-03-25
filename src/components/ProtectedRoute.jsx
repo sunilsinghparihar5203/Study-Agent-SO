@@ -1,30 +1,10 @@
-import React, { useState, useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
+import React from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext.jsx'
 
 function ProtectedRoute({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { auth, onAuthStateChanged } = await import('../../firebase.js')
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          setUser(user)
-          setLoading(false)
-        })
-        return unsubscribe
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        setLoading(false)
-      }
-    }
-
-    const unsubscribe = initializeAuth()
-    return () => {
-      unsubscribe.then(unsub => unsub && unsub())
-    }
-  }, [])
+  const { user, loading } = useAuth()
+  const location = useLocation()
 
   if (loading) {
     return (
@@ -36,7 +16,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />
+    return <Navigate to="/auth" state={{ from: location }} replace />
   }
 
   return children

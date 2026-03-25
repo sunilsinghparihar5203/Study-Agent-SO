@@ -1,54 +1,22 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext.jsx'
 import './Navbar.css'
 
 function Navbar() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
   const location = useLocation()
-
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { auth, onAuthStateChanged, logoutUser } = await import('../../firebase.js')
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          setUser(user)
-          setLoading(false)
-        })
-        return unsubscribe
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        setLoading(false)
-      }
-    }
-
-    const unsubscribe = initializeAuth()
-    return () => {
-      unsubscribe.then(unsub => unsub && unsub())
-    }
-  }, [])
 
   const handleLogout = async () => {
     try {
       const { logoutUser } = await import('../../firebase.js')
       await logoutUser()
-      setUser(null)
     } catch (error) {
       console.error('Logout error:', error)
     }
   }
 
   const isActive = (path) => location.pathname === path
-
-  if (loading) {
-    return (
-      <header className="navbar">
-        <div className="navbar-loading">
-          <div className="loading-spinner"></div>
-        </div>
-      </header>
-    )
-  }
 
   return (
     <header className="navbar">
@@ -124,4 +92,4 @@ function Navbar() {
   )
 }
 
-export default Navbar
+export default React.memo(Navbar)

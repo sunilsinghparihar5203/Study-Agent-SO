@@ -8,8 +8,8 @@
 
 .dashboard-header {
   text-align: center;
-  margin-bottom: 3rem;
-  padding: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
   background: var(--background-card);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
@@ -30,8 +30,8 @@
 
 .dashboard-header h2 {
   color: var(--text-primary);
-  margin: 0 0 1rem 0;
-  font-size: 3rem;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
   font-weight: 800;
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   -webkit-background-clip: text;
@@ -43,7 +43,7 @@
 .dashboard-header p {
   color: var(--text-secondary);
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1rem;
   line-height: 1.6;
 }
 

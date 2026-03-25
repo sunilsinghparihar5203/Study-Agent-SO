@@ -1,78 +1,86 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import { useNavigate, useLocation, Navigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext.jsx'
+import { sanitizeEmail, validatePassword, rateLimit } from '../utils/security.js'
 import './Auth.css'
 
 function Auth() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading } = useAuth()
   const [error, setError] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: ''
   })
 
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { auth, onAuthStateChanged } = await import('../../firebase.js')
+  // Get redirect path from location state or default to dashboard
+  const from = location.state?.from?.pathname || '/'
 
-        // Check if Firebase is properly configured
-        if (!auth) {
-          console.warn('Firebase not configured - running in demo mode')
-          setLoading(false)
-          return
-        }
-
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          setUser(user)
-          setLoading(false)
-        })
-        return unsubscribe
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        // Don't set error for Firebase config issues - just continue in demo mode
-        setLoading(false)
-      }
-    }
-
-    const unsubscribe = initializeAuth()
-    return () => {
-      unsubscribe.then(unsub => unsub && unsub())
-    }
-  }, [])
+  if (user) {
+    return <Navigate to={from} replace />
+  }
 
   const handleEmailAuth = async (e) => {
     e.preventDefault()
     setError('')
 
-    if (isSignUp && formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
-      return
-    }
-
     try {
+      // Rate limiting check
+      rateLimit.check(formData.email)
+
+      // Validate and sanitize inputs
+      const sanitizedEmail = sanitizeEmail(formData.email)
+      validatePassword(formData.password)
+
+      // Check password confirmation for signup
+      if (isSignUp && formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match')
+        return
+      }
+
+      // Update form data with sanitized values
+      const secureFormData = {
+        ...formData,
+        email: sanitizedEmail
+      }
+
       const { signUpWithEmail, signInWithEmail } = await import('../../firebase.js')
       const user = isSignUp
-        ? await signUpWithEmail(formData.email, formData.password)
-        : await signInWithEmail(formData.email, formData.password)
+        ? await signUpWithEmail(secureFormData.email, secureFormData.password)
+        : await signInWithEmail(secureFormData.email, secureFormData.password)
 
-      setUser(user)
       console.log('User authenticated:', user)
+
+      if (user) {
+        navigate(from, { replace: true })
+      }
 
       // Initialize user data after successful sign in
       if (user) {
         const { initializeDefaultSubjects } = await import('../../firebase.js')
-        await initializeDefaultSubjects(user.uid)
-        console.log('User data initialized for:', user.uid)
+        initializeDefaultSubjects(user.uid)
+          .then(() => {
+            console.log('User data initialized for:', user.uid)
+          })
+          .catch((error) => {
+            console.error('User data initialization error:', error)
+          })
+
+        // Clear rate limit on successful authentication
+        rateLimit.clear(secureFormData.email)
       }
     } catch (error) {
       console.error('Authentication error:', error)
+
+      // Handle security-related errors
+      if (error.message.includes('Too many attempts')) {
+        setError(error.message)
+        return
+      }
+
       let errorMessage = 'Authentication failed'
 
       switch (error.code) {
@@ -90,6 +98,9 @@ function Auth() {
           break
         case 'auth/weak-password':
           errorMessage = 'Password should be at least 6 characters.'
+          break
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please try again later.'
           break
         default:
           errorMessage = error.message || 'Authentication failed'
@@ -115,48 +126,12 @@ function Auth() {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      setError('')
-      const { logoutUser } = await import('../../firebase.js')
-      await logoutUser()
-      setUser(null)
-      console.log('User logged out')
-    } catch (error) {
-      console.error('Logout error:', error)
-      setError('Failed to logout')
-    }
-  }
-
   if (loading) {
     return (
       <div className="auth-container">
         <div className="auth-loading">
           <div className="loading-spinner"></div>
           <p>Loading authentication...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (user) {
-    return (
-      <div className="auth-container">
-        <div className="auth-profile">
-          <div className="user-info">
-            {user.photoURL && (
-              <img src={user.photoURL} alt="Profile" className="profile-pic" />
-            )}
-            <div className="user-details">
-              <h3>{user.displayName || 'User'}</h3>
-              <p>{user.email}</p>
-            </div>
-          </div>
-          <div className="auth-actions">
-            <button className="btn btn-secondary" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
         </div>
       </div>
     )

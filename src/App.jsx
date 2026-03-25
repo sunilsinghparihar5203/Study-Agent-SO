@@ -1,39 +1,21 @@
-import React, { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { onAuthStateChanged } from 'firebase/auth'
-import Dashboard from './components/Dashboard.jsx'
-import StudySession from './components/StudySession.jsx'
-import MockTest from './components/MockTest.jsx'
-import Progress from './components/Progress.jsx'
-import ComputerScience from './components/ComputerScience.jsx'
-import Auth from './components/Auth.jsx'
+import React, { Suspense, lazy } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider, useAuth } from './contexts/AuthContext.jsx'
+import Navbar from './components/Navbar.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import './App.css'
 
-function App() {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+// Lazy load components
+const Dashboard = lazy(() => import('./components/Dashboard.jsx'))
+const StudySession = lazy(() => import('./components/StudySession.jsx'))
+const MockTest = lazy(() => import('./components/MockTest.jsx'))
+const Progress = lazy(() => import('./components/Progress.jsx'))
+const ComputerScience = lazy(() => import('./components/ComputerScience.jsx'))
+const Auth = lazy(() => import('./components/Auth.jsx'))
 
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const { auth, onAuthStateChanged } = await import('../firebase.js')
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          setUser(user)
-          setLoading(false)
-        })
-        return unsubscribe
-      } catch (error) {
-        console.error('Firebase initialization error:', error)
-        setLoading(false)
-      }
-    }
-
-    const unsubscribe = initializeAuth()
-    return () => {
-      unsubscribe.then(unsub => unsub && unsub())
-    }
-  }, [])
+function AppContent() {
+  const location = useLocation()
+  const { user, loading } = useAuth()
 
   if (loading) {
     return (
@@ -44,35 +26,24 @@ function App() {
     )
   }
 
-  return (
-    <Router>
-      <div className="app">
-        <header className="app-header">
-          <h1>SBI IT Officer Study Agent</h1>
-          <nav>
-            <a href="/">Dashboard</a>
-            <a href="/study">Study</a>
-            <a href="/computer-science">Computer Science</a>
-            <a href="/test">Mock Test</a>
-            <a href="/progress">Progress</a>
-            {user ? (
-              <div className="user-info">
-                <span>Welcome, {user.displayName || user.email}</span>
-                <button onClick={() => window.firebaseFunctions.logoutUser()}>
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <a href="/auth" className="sign-in-btn">
-                Sign In
-              </a>
-            )}
-          </nav>
-        </header>
+  const showNavbar = location.pathname !== '/auth'
 
-        <main className="app-main">
+  return (
+    <div className="app">
+      {showNavbar && <Navbar />}
+
+      <main className={`app-main ${showNavbar ? 'with-navbar' : 'full-height'}`}>
+        <Suspense fallback={
+          <div className="app-loading">
+            <div className="loading-spinner"></div>
+            <p>Loading...</p>
+          </div>
+        }>
           <Routes>
-            <Route path="/auth" element={<Auth />} />
+            <Route
+              path="/auth"
+              element={user ? <Navigate to="/" replace /> : <Auth />}
+            />
 
             <Route path="/" element={
               <ProtectedRoute>
@@ -106,8 +77,18 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </main>
-      </div>
+        </Suspense>
+      </main>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   )
 }

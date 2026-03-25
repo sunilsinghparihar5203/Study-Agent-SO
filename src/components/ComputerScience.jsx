@@ -72,7 +72,7 @@ function ComputerScience() {
         question: 'What does ACID stand for in database transactions?',
         options: [
           'Atomicity, Consistency, Isolation, Durability',
-          'Atomicity, Consistency, Integrity, Durability', 
+          'Atomicity, Consistency, Integrity, Durability',
           'Atomicity, Consistency, Isolation, Dependency',
           'Atomicity, Concurrency, Isolation, Durability'
         ],
@@ -138,21 +138,16 @@ function ComputerScience() {
 
   return (
     <div className="computer-science">
-      <div className="cs-header">
-        <h2>Computer Science for IT Officers</h2>
-        <p>Master programming, databases, networking, and more for your SBI IT Officer exam</p>
-      </div>
-
       <div className="cs-content">
-        <div className="topics-grid">
+        <div className="cs-topics-grid">
           {computerScienceTopics.map(topic => (
-            <div 
+            <div
               key={topic.id}
               className={`topic-card ${selectedTopic === topic.id ? 'selected' : ''}`}
               onClick={() => handleTopicSelect(topic.id)}
-              style={{borderTopColor: topic.color}}
+              style={{ borderTopColor: topic.color }}
             >
-              <h3 style={{color: topic.color}}>{topic.name}</h3>
+              <h3 style={{ color: topic.color }}>{topic.name}</h3>
               <div className="topic-info">
                 <span className="weightage">Weightage: {topic.weightage}%</span>
                 <div className="subtopics">
@@ -179,7 +174,7 @@ function ComputerScience() {
                       <p className="question-text">{q.question}</p>
                       <div className="options">
                         {q.options.map((option, optIndex) => (
-                          <button 
+                          <button
                             key={optIndex}
                             className="option-btn"
                             onClick={() => alert(`Correct: ${q.correct === optIndex ? 'Yes' : 'No'}\n\nExplanation: ${q.explanation}`)}
@@ -202,7 +197,7 @@ function ComputerScience() {
                     placeholder="Write your notes here..."
                     rows="4"
                   />
-                  <button 
+                  <button
                     className="save-note-btn"
                     onClick={handleSaveNote}
                     disabled={!newNote.trim()}
