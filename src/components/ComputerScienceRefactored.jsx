@@ -6,11 +6,12 @@ import './ComputerScienceRefactored.css'
 
 function ComputerScienceRefactored() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState('notes')
+  const [activeTab, setActiveTab] = useState('topics')
   const [notes, setNotes] = useState([])
   const [questions, setQuestions] = useState([])
   const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(false)
+  const [topicDescriptions, setTopicDescriptions] = useState({})
 
   const computerScienceTopics = [
     {
@@ -66,7 +67,7 @@ function ComputerScienceRefactored() {
     setLoading(true)
     try {
       const { getStudyNotes, getUserQuestions, getUserTestConfigurations } = await import('../../firebase.js')
-      
+
       const [notesData, questionsData, quizzesData] = await Promise.all([
         getStudyNotes(user.uid),
         getUserQuestions(user.uid),
@@ -84,6 +85,22 @@ function ComputerScienceRefactored() {
     }
   }
 
+  const loadTopicDescription = async (topicName) => {
+    if (topicDescriptions[topicName]) return // Already loaded
+
+    try {
+      const geminiService = await import('../services/geminiService.js').then(m => m.default)
+      const description = await geminiService.getTopicDescription('Computer Science', topicName)
+
+      setTopicDescriptions(prev => ({
+        ...prev,
+        [topicName]: description
+      }))
+    } catch (error) {
+      console.error('Error loading topic description:', error)
+    }
+  }
+
   const renderTopicsGrid = () => {
     return (
       <div className="topics-grid">
@@ -97,15 +114,28 @@ function ComputerScienceRefactored() {
               <div className="topics-list">
                 {topic.topics.map(subtopic => (
                   <div key={subtopic} className="subtopic-item">
-                    <Link to={`/notes?subject=${topic.id}&topic=${subtopic}`} className="subtopic-link">
-                      📝 {subtopic}
-                    </Link>
-                    <Link to={`/test?subject=${topic.id}&topic=${subtopic}`} className="subtopic-link">
-                      📝 {subtopic}
-                    </Link>
-                    <Link to={`/test?subject=${topic.id}&topic=${subtopic}`} className="subtopic-link">
-                      📝 {subtopic}
-                    </Link>
+                    <div
+                      className="subtopic-info"
+                      onMouseEnter={() => loadTopicDescription(subtopic)}
+                    >
+                      <span className="subtopic-name">{subtopic}</span>
+                    </div>
+                    <div className="subtopic-actions">
+                      <Link to={`/notes?subject=${topic.id}&topic=${subtopic}`} className="subtopic-link">
+                        📝 Notes
+                      </Link>
+                      <Link to={`/test?subject=${topic.id}&topic=${subtopic}`} className="subtopic-link">
+                        � Questions
+                      </Link>
+                      <Link to={`/test?subject=${topic.id}&topic=${subtopic}`} className="subtopic-link">
+                        🎯 Quiz
+                      </Link>
+                    </div>
+                    {topicDescriptions[subtopic] && (
+                      <div className="topic-description">
+                        {topicDescriptions[subtopic]}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -255,25 +285,25 @@ function ComputerScienceRefactored() {
       </div>
 
       <div className="cs-tabs">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'topics' ? 'active' : ''}`}
           onClick={() => setActiveTab('topics')}
         >
           📚 Topics
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'notes' ? 'active' : ''}`}
           onClick={() => setActiveTab('notes')}
         >
           📝 Notes
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'questions' ? 'active' : ''}`}
           onClick={() => setActiveTab('questions')}
         >
           📋 Previous Year Questions
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'quizzes' ? 'active' : ''}`}
           onClick={() => setActiveTab('quizzes')}
         >

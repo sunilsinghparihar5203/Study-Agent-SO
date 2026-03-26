@@ -890,14 +890,43 @@ export const getUserTestConfigurations = async (userId) => {
   }
 };
 
-// Generate test questions using AI (mock implementation)
+// Generate test questions using AI (Gemini integration)
 export const generateTestQuestions = async (testConfig) => {
   try {
     if (!testConfig?.createdBy) {
       throw new Error("generateTestQuestions: missing createdBy (userId)");
     }
 
-    // This is the non-AI version: select from user's saved question bank.
+    // Import Gemini service
+    const geminiService = await import("./src/services/geminiService.js").then(
+      (m) => m.default,
+    );
+
+    // Generate questions using Gemini AI
+    const generatedQuestions = await geminiService.generateQuestions(
+      testConfig.subject,
+      testConfig.topics?.[0] || "General",
+      testConfig.difficulty || "medium",
+      testConfig.totalQuestions || 10,
+    );
+
+    // If AI generation fails, fallback to user's question bank
+    if (!generatedQuestions || generatedQuestions.length === 0) {
+      console.warn("AI generation failed, using user question bank");
+      return await generateTestQuestionsFromUserBank(testConfig);
+    }
+
+    return generatedQuestions;
+  } catch (error) {
+    console.error("Error generating test questions with AI:", error);
+    // Fallback to user's question bank
+    return await generateTestQuestionsFromUserBank(testConfig);
+  }
+};
+
+// Fallback: generate questions from user's question bank
+const generateTestQuestionsFromUserBank = async (testConfig) => {
+  try {
     const allUserQuestions = await getUserQuestions(testConfig.createdBy);
 
     const topicSet = new Set((testConfig.topics || []).filter(Boolean));
@@ -915,8 +944,8 @@ export const generateTestQuestions = async (testConfig) => {
       Math.min(testConfig.totalQuestions || 0, shuffled.length),
     );
   } catch (error) {
-    console.error("Error generating test questions:", error);
-    throw error;
+    console.error("Error generating test questions from user bank:", error);
+    return [];
   }
 };
 

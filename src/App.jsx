@@ -15,6 +15,7 @@ const ComputerScienceRefactored = lazy(() => import('./components/ComputerScienc
 const NotesPage = lazy(() => import('./components/NotesPage.jsx'))
 const TestPage = lazy(() => import('./components/TestPage.jsx'))
 const SubjectManager = lazy(() => import('./components/SubjectManager.jsx'))
+const AIStudyPlan = lazy(() => import('./components/AIStudyPlan.jsx'))
 const Auth = lazy(() => import('./components/Auth.jsx'))
 
 function AppContent() {
@@ -79,9 +80,15 @@ function AppContent() {
               </ProtectedRoute>
             } />
 
-            <Route path="/subjects" element={
+            <Route path="/subject-manager" element={
               <ProtectedRoute>
                 <SubjectManager />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/ai-study-plan" element={
+              <ProtectedRoute>
+                <AIStudyPlan />
               </ProtectedRoute>
             } />
 

@@ -273,6 +273,7 @@ function Dashboard() {
             <div className="action-buttons">
               <Link to="/study" className="btn btn-primary">Start Study Session</Link>
               <Link to="/test" className="btn btn-secondary">Take Mock Test</Link>
+              <Link to="/ai-study-plan" className="btn">AI Study Plan</Link>
               <Link to="/computer-science" className="btn">Computer Science</Link>
               <Link to="/progress" className="btn">View Progress</Link>
             </div>
