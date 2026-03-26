@@ -46,6 +46,12 @@ function Navbar() {
               Computer Science
             </Link>
             <Link
+              to="/notes"
+              className={`nav-link ${isActive('/notes') ? 'active' : ''}`}
+            >
+              Notes
+            </Link>
+            <Link
               to="/test"
               className={`nav-link ${isActive('/test') ? 'active' : ''}`}
             >

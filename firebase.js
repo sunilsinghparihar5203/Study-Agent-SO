@@ -589,6 +589,568 @@ export const getUserAnalytics = async (userId) => {
   }
 };
 
+// ============ SUBJECT AND TOPIC MANAGEMENT ============
+
+// Save subject with topics to database
+export const saveSubjectWithTopics = async (subjectData) => {
+  try {
+    const subjectsRef = collection(db, "subjects");
+    const docRef = await addDoc(subjectsRef, {
+      ...subjectData,
+      createdAt: new Date(),
+    });
+    console.log("Subject saved with ID:", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("Error saving subject:", error);
+    throw error;
+  }
+};
+
+// Get all subjects with topics
+export const getAllSubjects = async () => {
+  try {
+    const q = query(collection(db, "subjects"), orderBy("name", "asc"));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error("Error fetching subjects:", error);
+    throw error;
+  }
+};
+
+// Get subjects and topics for a user
+export const getUserSubjectsAndTopics = async (userId) => {
+  try {
+    const q = query(
+      collection(db, "subjects"),
+      where("createdBy", "==", userId),
+      orderBy("name", "asc"),
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  } catch (error) {
+    console.error("Error fetching user subjects:", error);
+    throw error;
+  }
+};
+
+// Update subject
+export const updateSubject = async (subjectId, subjectData) => {
+  try {
+    const subjectRef = doc(db, "subjects", subjectId);
+    await updateDoc(subjectRef, {
+      ...subjectData,
+      updatedAt: new Date(),
+    });
+    console.log("Subject updated successfully");
+    return true;
+  } catch (error) {
+    console.error("Error updating subject:", error);
+    throw error;
+  }
+};
+
+// Delete subject (and all related questions)
+export const deleteSubject = async (subjectId) => {
+  try {
+    // First, delete all questions related to this subject
+    const questionsQuery = query(
+      collection(db, "questions"),
+      where("subject", "==", subjectId),
+    );
+    const questionsSnapshot = await getDocs(questionsQuery);
+
+    const batch = writeBatch(db);
+    questionsSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Delete the subject
+    const subjectRef = doc(db, "subjects", subjectId);
+    batch.delete(subjectRef);
+
+    await batch.commit();
+    console.log("Subject and related questions deleted successfully");
+    return true;
+  } catch (error) {
+    console.error("Error deleting subject:", error);
+    throw error;
+  }
+};
+
+// Add topic to existing subject
+export const addTopicToSubject = async (subjectId, topicData) => {
+  try {
+    const subjectRef = doc(db, "subjects", subjectId);
+    const subjectDoc = await getDoc(subjectRef);
+
+    if (!subjectDoc.exists()) {
+      throw new Error("Subject not found");
+    }
+
+    const subjectData = subjectDoc.data();
+    const updatedTopics = [...(subjectData.topics || []), topicData];
+
+    await updateDoc(subjectRef, {
+      topics: updatedTopics,
+      updatedAt: new Date(),
+    });
+
+    console.log("Topic added successfully");
+    return true;
+  } catch (error) {
+    console.error("Error adding topic:", error);
+    throw error;
+  }
+};
+
+// Update topic in subject
+export const updateTopicInSubject = async (
+  subjectId,
+  topicIndex,
+  topicData,
+) => {
+  try {
+    const subjectRef = doc(db, "subjects", subjectId);
+    const subjectDoc = await getDoc(subjectRef);
+
+    if (!subjectDoc.exists()) {
+      throw new Error("Subject not found");
+    }
+
+    const subjectData = subjectDoc.data();
+    const updatedTopics = [...(subjectData.topics || [])];
+    updatedTopics[topicIndex] = topicData;
+
+    await updateDoc(subjectRef, {
+      topics: updatedTopics,
+      updatedAt: new Date(),
+    });
+
+    console.log("Topic updated successfully");
+    return true;
+  } catch (error) {
+    console.error("Error updating topic:", error);
+    throw error;
+  }
+};
+
+// Remove topic from subject
+export const removeTopicFromSubject = async (subjectId, topicIndex) => {
+  try {
+    const subjectRef = doc(db, "subjects", subjectId);
+    const subjectDoc = await getDoc(subjectRef);
+
+    if (!subjectDoc.exists()) {
+      throw new Error("Subject not found");
+    }
+
+    const subjectData = subjectDoc.data();
+    const updatedTopics = [...(subjectData.topics || [])];
+    updatedTopics.splice(topicIndex, 1);
+
+    await updateDoc(subjectRef, {
+      topics: updatedTopics,
+      updatedAt: new Date(),
+    });
+
+    console.log("Topic removed successfully");
+    return true;
+  } catch (error) {
+    console.error("Error removing topic:", error);
+    throw error;
+  }
+};
+
+// ============ QUESTION AND TEST MANAGEMENT ============
+
+// Save a single question to the database
+export const saveQuestion = async (questionData) => {
+  try {
+    if (!questionData?.createdBy) {
+      throw new Error("saveQuestion: missing createdBy (userId)");
+    }
+
+    const questionsRef = collection(
+      db,
+      `users/${questionData.createdBy}/questions`,
+    );
+    const docRef = await addDoc(questionsRef, {
+      ...questionData,
+      createdAt: new Date(),
+    });
+    console.log("Question saved with ID:", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("Error saving question:", error);
+    throw error;
+  }
+};
+
+// Get questions by subject and topic (for a specific user)
+export const getQuestionsBySubject = async (userId, subject, topic = null) => {
+  try {
+    if (!userId) {
+      throw new Error("getQuestionsBySubject: missing userId");
+    }
+
+    const querySnapshot = await getDocs(
+      query(
+        collection(db, `users/${userId}/questions`),
+        orderBy("createdAt", "desc"),
+      ),
+    );
+
+    const questions = querySnapshot.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    }));
+    return questions.filter((q) => {
+      if (q.subject !== subject) return false;
+      if (topic && q.topic !== topic) return false;
+      return true;
+    });
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    throw error;
+  }
+};
+
+// Get all questions for a user (created by them)
+export const getUserQuestions = async (userId) => {
+  try {
+    if (!userId) {
+      throw new Error("getUserQuestions: missing userId");
+    }
+    const querySnapshot = await getDocs(
+      query(
+        collection(db, `users/${userId}/questions`),
+        orderBy("createdAt", "desc"),
+      ),
+    );
+    return querySnapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+  } catch (error) {
+    console.error("Error fetching user questions:", error);
+    throw error;
+  }
+};
+
+// Save test configuration
+export const saveTestConfiguration = async (testData) => {
+  try {
+    if (!testData?.createdBy) {
+      throw new Error("saveTestConfiguration: missing createdBy (userId)");
+    }
+
+    const testsRef = collection(
+      db,
+      `users/${testData.createdBy}/testConfigurations`,
+    );
+    const docRef = await addDoc(testsRef, {
+      ...testData,
+      createdAt: new Date(),
+    });
+    console.log("Test configuration saved with ID:", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("Error saving test configuration:", error);
+    throw error;
+  }
+};
+
+// Get test configurations for a user
+export const getUserTestConfigurations = async (userId) => {
+  try {
+    if (!userId) {
+      throw new Error("getUserTestConfigurations: missing userId");
+    }
+    const querySnapshot = await getDocs(
+      query(
+        collection(db, `users/${userId}/testConfigurations`),
+        orderBy("createdAt", "desc"),
+      ),
+    );
+    return querySnapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+  } catch (error) {
+    console.error("Error fetching test configurations:", error);
+    throw error;
+  }
+};
+
+// Generate test questions using AI (mock implementation)
+export const generateTestQuestions = async (testConfig) => {
+  try {
+    if (!testConfig?.createdBy) {
+      throw new Error("generateTestQuestions: missing createdBy (userId)");
+    }
+
+    // This is the non-AI version: select from user's saved question bank.
+    const allUserQuestions = await getUserQuestions(testConfig.createdBy);
+
+    const topicSet = new Set((testConfig.topics || []).filter(Boolean));
+    const filtered = allUserQuestions.filter((q) => {
+      if (q.subject !== testConfig.subject) return false;
+      if (topicSet.size > 0 && !topicSet.has(q.topic)) return false;
+      if (testConfig.difficulty && q.difficulty !== testConfig.difficulty)
+        return false;
+      return true;
+    });
+
+    const shuffled = filtered.sort(() => 0.5 - Math.random());
+    return shuffled.slice(
+      0,
+      Math.min(testConfig.totalQuestions || 0, shuffled.length),
+    );
+  } catch (error) {
+    console.error("Error generating test questions:", error);
+    throw error;
+  }
+};
+
+// ============ DASHBOARD SUMMARY / AGGREGATES ============
+
+const safeToDate = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value?.toDate === "function") return value.toDate();
+  const parsed = new Date(value);
+  // eslint-disable-next-line no-restricted-globals
+  return isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const getLimitedDocs = async (collectionPath, maxDocs = 200) => {
+  const snap = await getDocs(
+    query(
+      collection(db, collectionPath),
+      orderBy("timestamp", "desc"),
+      limit(maxDocs),
+    ),
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
+const getLimitedDocsByCreatedAt = async (collectionPath, maxDocs = 200) => {
+  const snap = await getDocs(
+    query(
+      collection(db, collectionPath),
+      orderBy("createdAt", "desc"),
+      limit(maxDocs),
+    ),
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
+export const getDashboardSummary = async (userId) => {
+  try {
+    if (!userId) throw new Error("getDashboardSummary: missing userId");
+
+    const [
+      sessions,
+      progress,
+      mockTests,
+      notes,
+      questions,
+      testConfigurations,
+    ] = await Promise.all([
+      getLimitedDocs(`users/${userId}/studySessions`, 200),
+      getLimitedDocs(`users/${userId}/progress`, 200),
+      getLimitedDocs(`users/${userId}/mockTests`, 100),
+      getLimitedDocs(`users/${userId}/notes`, 200),
+      getLimitedDocsByCreatedAt(`users/${userId}/questions`, 500),
+      getLimitedDocsByCreatedAt(`users/${userId}/testConfigurations`, 200),
+    ]);
+
+    const totalStudyMinutes = sessions.reduce((sum, s) => {
+      // some code stores duration in minutes, some in seconds; we assume minutes
+      const d = typeof s.duration === "number" ? s.duration : 0;
+      return sum + d;
+    }, 0);
+
+    const progressQuestions = progress.reduce(
+      (sum, p) => sum + (p.questionsAnswered || 0),
+      0,
+    );
+    const progressCorrect = progress.reduce(
+      (sum, p) => sum + (p.correctAnswers || 0),
+      0,
+    );
+
+    const testQuestions = mockTests.reduce(
+      (sum, t) => sum + (t.totalQuestions || 0),
+      0,
+    );
+    const testCorrectApprox = mockTests.reduce((sum, t) => {
+      if (typeof t.correctCount === "number") return sum + t.correctCount;
+      // if only score is present, approximate
+      if (typeof t.score === "number" && typeof t.totalQuestions === "number") {
+        return sum + Math.round((t.score / 100) * t.totalQuestions);
+      }
+      return sum;
+    }, 0);
+
+    const questionsAnswered = progressQuestions + testQuestions;
+    const correctAnswers = progressCorrect + testCorrectApprox;
+    const accuracy =
+      questionsAnswered > 0
+        ? Math.round((correctAnswers / questionsAnswered) * 100)
+        : 0;
+
+    // streak from ANY activity (session/progress/test/note)
+    const activityDates = new Set();
+    const addDate = (dt) => {
+      const d = safeToDate(dt);
+      if (!d) return;
+      activityDates.add(d.toISOString().split("T")[0]);
+    };
+    sessions.forEach((s) => addDate(s.timestamp));
+    progress.forEach((p) => addDate(p.timestamp));
+    mockTests.forEach((t) => addDate(t.timestamp || t.completedAt));
+    notes.forEach((n) => addDate(n.timestamp || n.createdAt));
+
+    const today = new Date();
+    let streak = 0;
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split("T")[0];
+      if (activityDates.has(key)) streak += 1;
+      else if (i > 0) break;
+    }
+
+    return {
+      totals: {
+        studyMinutes: Math.round(totalStudyMinutes),
+        questionsAnswered,
+        accuracy,
+        streak,
+      },
+      counts: {
+        notes: notes.length,
+        questions: questions.length,
+        testsCreated: testConfigurations.length,
+        testsTaken: mockTests.length,
+      },
+      // Per-subject aggregates
+      subjects: (() => {
+        const subjectMap = new Map();
+
+        // Helper to add a subject entry
+        const ensureSubject = (subjectId, subjectName) => {
+          if (!subjectMap.has(subjectId)) {
+            subjectMap.set(subjectId, {
+              id: subjectId,
+              name: subjectName || subjectId,
+              notesCount: 0,
+              questionsCount: 0,
+              testsTakenCount: 0,
+              avgScore: 0,
+              totalScore: 0,
+              scoreCount: 0,
+            });
+          }
+          return subjectMap.get(subjectId);
+        };
+
+        // Process notes
+        notes.forEach((note) => {
+          const sub = ensureSubject(note.subject, note.subjectName);
+          sub.notesCount += 1;
+        });
+
+        // Process questions
+        questions.forEach((q) => {
+          const sub = ensureSubject(q.subject, q.subject);
+          sub.questionsCount += 1;
+        });
+
+        // Process mock tests (taken)
+        mockTests.forEach((test) => {
+          const sub = ensureSubject(test.subject, test.subjectName);
+          sub.testsTakenCount += 1;
+          if (typeof test.score === "number") {
+            sub.totalScore += test.score;
+            sub.scoreCount += 1;
+          }
+        });
+
+        // Compute averages and progress (0-100)
+        const result = Array.from(subjectMap.values()).map((s) => ({
+          ...s,
+          avgScore:
+            s.scoreCount > 0 ? Math.round(s.totalScore / s.scoreCount) : 0,
+        }));
+
+        // Simple progress heuristic: combine notes, questions, and avgScore
+        result.forEach((s) => {
+          const activityScore = Math.min(
+            100,
+            s.notesCount * 10 + s.questionsCount * 5,
+          );
+          const performanceScore = s.avgScore;
+          s.progress = Math.round((activityScore + performanceScore) / 2);
+        });
+
+        return result;
+      })(),
+      // Recent activity (last 5 items)
+      recentActivity: (() => {
+        const all = [
+          ...sessions.map((s) => ({
+            type: "session",
+            title: "Study Session",
+            timestamp: s.timestamp,
+            data: s,
+          })),
+          ...progress.map((p) => ({
+            type: "progress",
+            title: "Progress Update",
+            timestamp: p.timestamp,
+            data: p,
+          })),
+          ...mockTests.map((t) => ({
+            type: "test",
+            title: "Test Taken",
+            timestamp: t.timestamp || t.completedAt,
+            data: t,
+          })),
+          ...notes.map((n) => ({
+            type: "note",
+            title: "Note Created",
+            timestamp: n.timestamp || n.createdAt,
+            data: n,
+          })),
+        ];
+        return all
+          .filter((i) => i.timestamp)
+          .sort((a, b) => {
+            const da = safeToDate(a.timestamp);
+            const db = safeToDate(b.timestamp);
+            if (!da) return 1;
+            if (!db) return -1;
+            return db.getTime() - da.getTime();
+          })
+          .slice(0, 5);
+      })(),
+    };
+  } catch (error) {
+    console.error("Error building dashboard summary:", error);
+    throw error;
+  }
+};
+
 // Initialize default subjects and topics for new users
 export const initializeDefaultSubjects = async (userId) => {
   const defaultSubjects = [

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { app } from '../firebase.js'
 import App from './App.jsx'
 import './index.css'
+import { Toaster } from 'react-hot-toast'
 
 // Make Firebase functions globally available
 window.firebaseFunctions = {
@@ -20,5 +21,6 @@ window.firebaseFunctions = {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
+    <Toaster position="top-right" />
   </React.StrictMode>,
 )

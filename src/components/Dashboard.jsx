@@ -7,18 +7,13 @@ function Dashboard() {
   const { user } = useAuth()
   const [dailyPlan, setDailyPlan] = useState(null)
   const [stats, setStats] = useState({
-    studyTime: 45,
-    questionsAnswered: 23,
-    accuracy: 87,
-    streak: 3
+    studyTime: 0,
+    questionsAnswered: 0,
+    accuracy: 0,
+    streak: 0
   })
-  const [subjects, setSubjects] = useState([
-    { id: 1, name: 'Reasoning', progress: 75 },
-    { id: 2, name: 'Quantitative Aptitude', progress: 60 },
-    { id: 3, name: 'English Language', progress: 85 },
-    { id: 4, name: 'Computer Knowledge', progress: 40 },
-    { id: 5, name: 'Banking Awareness', progress: 90 }
-  ])
+  const [subjects, setSubjects] = useState([])
+  const [recentActivity, setRecentActivity] = useState([])
   const [loading, setLoading] = useState(false) // Start with false to show content immediately
 
   useEffect(() => {
@@ -142,65 +137,29 @@ function Dashboard() {
 
   const loadStats = async (userId) => {
     try {
-      const { getAllProgress, getStudySessions } = await import('../../firebase.js')
+      const { getDashboardSummary } = await import('../../firebase.js')
+      const summary = await getDashboardSummary(userId)
 
-      // Get user progress and sessions
-      const [progressData, sessionsData] = await Promise.all([
-        getAllProgress(userId),
-        getStudySessions(userId, 7) // Last 7 sessions
-      ])
+      setStats({
+        studyTime: summary.totals.studyMinutes,
+        questionsAnswered: summary.totals.questionsAnswered,
+        accuracy: summary.totals.accuracy,
+        streak: summary.totals.streak
+      })
 
-      // Calculate stats from real data
-      const totalStudyTime = sessionsData.reduce((total, session) => {
-        return total + (session.duration || 0)
-      }, 0)
-
-      const totalQuestions = progressData.reduce((total, progress) => {
-        return total + (progress.questionsAnswered || 0)
-      }, 0)
-
-      const correctAnswers = progressData.reduce((total, progress) => {
-        return total + (progress.correctAnswers || 0)
-      }, 0)
-
-      const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
-
-      // Calculate streak (consecutive days with activity)
-      const today = new Date()
-      let streak = 0
-      for (let i = 0; i < 30; i++) {
-        const checkDate = new Date(today)
-        checkDate.setDate(checkDate.getDate() - i)
-        const dateStr = checkDate.toISOString().split('T')[0]
-
-        const hasActivity = sessionsData.some(session =>
-          session.timestamp.toDate().toISOString().split('T')[0] === dateStr
-        )
-
-        if (hasActivity) {
-          streak++
-        } else if (i > 0) {
-          break
-        }
-      }
-
-      const userStats = {
-        studyTime: Math.round(totalStudyTime / 60), // Convert to minutes
-        questionsAnswered: totalQuestions,
-        accuracy: accuracy,
-        streak: streak
-      }
-
-      setStats(userStats)
+      setSubjects(summary.subjects || [])
+      setRecentActivity(summary.recentActivity || [])
     } catch (error) {
       console.error('Error loading stats:', error)
-      // Fallback to mock data
+      // Fallback to empty states
       setStats({
-        studyTime: 120,
-        questionsAnswered: 45,
-        accuracy: 78,
-        streak: 5
+        studyTime: 0,
+        questionsAnswered: 0,
+        accuracy: 0,
+        streak: 0
       })
+      setSubjects([])
+      setRecentActivity([])
     }
   }
 
@@ -317,6 +276,24 @@ function Dashboard() {
               <Link to="/computer-science" className="btn">Computer Science</Link>
               <Link to="/progress" className="btn">View Progress</Link>
             </div>
+          </div>
+
+          <div className="card recent-activity">
+            <h3>Recent Activity</h3>
+            {recentActivity.length > 0 ? (
+              <div className="activity-list">
+                {recentActivity.map((activity, index) => (
+                  <div key={index} className="activity-item">
+                    <span className="activity-type">{activity.title}</span>
+                    <span className="activity-time">
+                      {activity.timestamp ? new Date(activity.timestamp.toDate ? activity.timestamp.toDate() : activity.timestamp).toLocaleString() : 'Unknown time'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No recent activity</p>
+            )}
           </div>
 
           <div className="card performance-stats">

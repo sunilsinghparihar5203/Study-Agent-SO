@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import './ComputerScience.css'
 
 function ComputerScience() {
@@ -124,6 +125,13 @@ function ComputerScience() {
       // Save to Firebase
       saveNoteToFirebase(note)
       setNewNote('')
+      toast.success('📝 Note saved successfully!', {
+        duration: 3000,
+        style: {
+          background: '#10b981',
+          color: 'white',
+        }
+      })
     }
   }
 
@@ -177,7 +185,25 @@ function ComputerScience() {
                           <button
                             key={optIndex}
                             className="option-btn"
-                            onClick={() => alert(`Correct: ${q.correct === optIndex ? 'Yes' : 'No'}\n\nExplanation: ${q.explanation}`)}
+                            onClick={() => {
+                              if (q.correct === optIndex) {
+                                toast.success('✅ Correct Answer!', {
+                                  duration: 3000,
+                                  style: {
+                                    background: '#10b981',
+                                    color: 'white',
+                                  }
+                                })
+                              } else {
+                                toast.error(`❌ Incorrect! ${q.explanation}`, {
+                                  duration: 4000,
+                                  style: {
+                                    background: '#ef4444',
+                                    color: 'white',
+                                  }
+                                })
+                              }
+                            }}
                           >
                             {String.fromCharCode(65 + optIndex)}. {option}
                           </button>
@@ -228,6 +254,9 @@ function ComputerScience() {
       <div className="cs-footer">
         <Link to="/" className="btn btn-secondary">
           Back to Dashboard
+        </Link>
+        <Link to="/notes" className="btn btn-primary">
+          📝 Manage Notes
         </Link>
       </div>
     </div>

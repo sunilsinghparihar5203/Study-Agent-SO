@@ -11,6 +11,10 @@ const StudySession = lazy(() => import('./components/StudySession.jsx'))
 const MockTest = lazy(() => import('./components/MockTest.jsx'))
 const Progress = lazy(() => import('./components/Progress.jsx'))
 const ComputerScience = lazy(() => import('./components/ComputerScience.jsx'))
+const ComputerScienceRefactored = lazy(() => import('./components/ComputerScienceRefactored.jsx'))
+const NotesPage = lazy(() => import('./components/NotesPage.jsx'))
+const TestPage = lazy(() => import('./components/TestPage.jsx'))
+const SubjectManager = lazy(() => import('./components/SubjectManager.jsx'))
 const Auth = lazy(() => import('./components/Auth.jsx'))
 
 function AppContent() {
@@ -59,13 +63,25 @@ function AppContent() {
 
             <Route path="/computer-science" element={
               <ProtectedRoute>
-                <ComputerScience />
+                <ComputerScienceRefactored />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/notes" element={
+              <ProtectedRoute>
+                <NotesPage />
               </ProtectedRoute>
             } />
 
             <Route path="/test" element={
               <ProtectedRoute>
-                <MockTest />
+                <TestPage />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/subjects" element={
+              <ProtectedRoute>
+                <SubjectManager />
               </ProtectedRoute>
             } />
 
